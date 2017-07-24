@@ -6,10 +6,14 @@ See License.txt in the project root for license information.
 
 package microsoft.aspnet.signalr.client.transport;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+
+import javax.net.ssl.SSLSocketFactory;
+import com.google.gson.Gson;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_17;
@@ -67,7 +71,7 @@ public class WebsocketTransport extends HttpClientTransport {
         boolean isSsl = false;
         String url = null;
         try {
-            url = connection.getUrl() + "signalr/" + connectionString + '?'
+            url = connection.getUrl() + connectionString + '?'
                     + "connectionData=" + URLEncoder.encode(URLEncoder.encode(connectionData, "UTF-8"), "UTF-8")
                     + "&connectionToken=" + URLEncoder.encode(URLEncoder.encode(connectionToken, "UTF-8"), "UTF-8")
                     + "&groupsToken=" + URLEncoder.encode(groupsToken, "UTF-8")
@@ -103,7 +107,7 @@ public class WebsocketTransport extends HttpClientTransport {
             return mConnectionFuture;
         }
 
-        mWebSocketClient = new WebSocketClient(uri,new Draft_17(), connection.getHeaders(), 0) {
+        mWebSocketClient = new WebSocketClient(uri, new Draft_17(), connection.getHeaders(), 0) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
                 mConnectionFuture.setResult(null);
@@ -153,11 +157,12 @@ public class WebsocketTransport extends HttpClientTransport {
         if(isSsl){
         	SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             try {
-            mWebSocketClient.setSocket(factory.createSocket());
+                mWebSocketClient.setSocket(factory.createSocket());
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
         }
+
         mWebSocketClient.connect();
 
         connection.closed(new Runnable() {
